@@ -39,16 +39,16 @@ typedef NS_ENUM(NSInteger, PBJFlashMode) {
     PBJFlashModeAuto = AVCaptureFlashModeAuto
 };
 
-typedef NS_ENUM(NSInteger, PBJAuthorizationStatus) {
-    PBJAuthorizationStatusNotDetermined = 0,
-    PBJAuthorizationStatusAuthorized,
-    PBJAuthorizationStatusAudioDenied
-};
-
 typedef NS_ENUM(NSInteger, PBJOutputFormat) {
     PBJOutputFormatPreset = 0,
     PBJOutputFormatSquare,
     PBJOutputFormatWidescreen
+};
+
+typedef NS_ENUM(NSInteger, MediaWriterCutfileStatus) {
+    MediaWriterCutfileStatusUnknow = 0,//未知状态
+    MediaWriterCutfileStatusWillGen,//正在生成文件
+    MediaWriterCutfileStatusDidGen,//已经新生成文件
 };
 
 // photo dictionary keys
@@ -101,6 +101,12 @@ extern NSString * const PBJVisionVideoThumbnailKey;
 @property (nonatomic, readonly) AVCaptureVideoPreviewLayer *previewLayer;
 @property (nonatomic, readonly) CGRect cleanAperture;
 
+// 视频长度
+//@property (nonatomic,assign) double pauseDuration;//点暂停时候的视频长度
+
+@property (nonatomic,assign) MediaWriterCutfileStatus cutfileStatus;
+
+
 - (void)startPreview;
 - (void)stopPreview;
 
@@ -132,6 +138,9 @@ extern NSString * const PBJVisionVideoThumbnailKey;
 @property (nonatomic, readonly) Float64 capturedAudioSeconds;
 @property (nonatomic, readonly) Float64 capturedVideoSeconds;
 
+//在startVideoCapture 之前 和 在pause之后 执行
+- (void)initOutputFile;
+
 - (void)startVideoCapture;
 - (void)pauseVideoCapture;
 - (void)resumeVideoCapture;
@@ -154,12 +163,6 @@ extern NSString * const PBJVisionVideoThumbnailKey;
 - (void)visionWillStartFocus:(PBJVision *)vision;
 - (void)visionDidStopFocus:(PBJVision *)vision;
 
-- (void)visionWillChangeExposure:(PBJVision *)vision;
-- (void)visionDidChangeExposure:(PBJVision *)vision;
-
-// authorization / availability
-
-- (void)visionDidChangeAuthorizationStatus:(PBJAuthorizationStatus)status;
 - (void)visionDidChangeFlashAvailablility:(PBJVision *)vision; // flash and torch
 
 // preview
@@ -175,14 +178,15 @@ extern NSString * const PBJVisionVideoThumbnailKey;
 
 // video
 
-- (void)visionDidStartVideoCapture:(PBJVision *)vision;
-- (void)visionDidPauseVideoCapture:(PBJVision *)vision; // stopped but not ended
-- (void)visionDidResumeVideoCapture:(PBJVision *)vision;
-- (void)vision:(PBJVision *)vision capturedVideo:(NSDictionary *)videoDict error:(NSError *)error;
+- (void)visionDidStartVideoCapture:(PBJVision *)vision; //开始拍摄的回调，只是修改状态
+- (void)visionDidPauseVideoCapture:(PBJVision *)vision; //已经完成导出暂停拍摄的回调，只是修改状态
+- (void)visionDidResumeVideoCapture:(PBJVision *)vision;//恢复拍摄的回调，只是修改状态
+- (void)visionDidEndVideoCapture:(PBJVision *)vision;   //结束拍摄的回调，只是修改状态
+- (void)visionDidExportCutFileVideoCapture:(PBJVision *)vision capturedVideo:(NSDictionary *)videoDict; // 暂停导出cutfile
 
 // video capture progress
 
-- (void)visionDidCaptureVideoSample:(PBJVision *) vision;
-- (void)visionDidCaptureAudioSample:(PBJVision *) vision;
+- (void)visionDidCaptureVideoSample:(PBJVision *) vision duration:(double)duration;
+
 
 @end
