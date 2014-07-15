@@ -8,6 +8,10 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 
+#define kVideo_MIN_SEC 0.1 //视频最小的拍摄时间，如果小于<=0.1那么丢弃
+#define kVideo_MAX_SEC 8.00 //视频最大的时间，8s
+#define kVideo_FRAME_PER_SEC 24 //每秒视频有多少帧
+
 // vision types
 
 typedef NS_ENUM(NSInteger, PBJCameraDevice) {

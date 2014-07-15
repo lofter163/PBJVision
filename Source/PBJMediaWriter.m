@@ -65,7 +65,7 @@
         _videoWrited = NO;
         _assetWriter = [[AVAssetWriter alloc] initWithURL:outputURL fileType:(NSString *)kUTTypeQuickTimeMovie error:&error];
         if (error) {
-            WLogDebug(@"error setting up the asset writer (%@)", error);
+            NSLog(@"error setting up the asset writer (%@)", error);
             _assetWriter = nil;
             return nil;
         }
@@ -185,7 +185,7 @@
 				if ([_assetWriterAudioIn appendSampleBuffer:sampleBuffer]) {
 					_audioTimestamp = timestamp;
 				}else{
-                    WLogDebug(@"文件记录appendSampleBuffer出错  appending audio (%@)", [_assetWriter error]);
+                    NSLog(@"文件记录appendSampleBuffer出错  appending audio (%@)", [_assetWriter error]);
                 }
 			}
 		}

@@ -8,7 +8,7 @@
 #import "PBJVision.h"
 #import "PBJVisionUtilities.h"
 #import "PBJMediaWriter.h"
-#import "VideoEditUtil.h"
+//#import "VideoEditUtil.h"
 
 #import <ImageIO/ImageIO.h>
 #import <OpenGLES/EAGL.h>
@@ -1227,7 +1227,7 @@ typedef void (^PBJVisionBlock)();
 
 - (void)startVideoCapture
 {
-    WLogDebug(@"starting video capture ...");
+    NSLog(@"starting video capture ...");
     [self _enqueueBlockInCaptureVideoQueue:^{
         if (![self _canSessionCaptureWithOutput:_currentOutput]) {
             DLog(@"session is not setup properly for capture");
@@ -1254,7 +1254,7 @@ typedef void (^PBJVisionBlock)();
     //NSLog(@"will pauseVideoCapture...");
     [self _enqueueBlockInCaptureVideoQueue:^{
         if(!_mediaWriter){
-            WLogDebug(@"没有输出的_mediaWriter。不可能执行到这里");
+            NSLog(@"没有输出的_mediaWriter。不可能执行到这里");
             return;
         }
         
@@ -1270,15 +1270,15 @@ typedef void (^PBJVisionBlock)();
 
 - (void)resumeVideoCapture
 {
-    WLogDebug(@"will resumeVideoCapture");
+    //NSLog(@"will resumeVideoCapture");
     [self _enqueueBlockInCaptureVideoQueue:^{
         if (!_flags.recording || !_flags.paused){
-            WLogDebug(@"will resumeVideoCapture 不可能之前没有暂停！");
+            //NSLog(@"will resumeVideoCapture 不可能之前没有暂停！");
             return;
         }
 
         if (_cutfileStatus != MediaWriterCutfileStatusDidGen) {
-            WLogError(@"严重错误:片段文件还没有准备好");
+            //NSLog(@"严重错误:片段文件还没有准备好");
             return;
         }
         
@@ -1294,7 +1294,7 @@ typedef void (^PBJVisionBlock)();
 - (void)endVideoCapture
 {
     //退出拍摄视频，不是暂停
-    WLogDebug(@"will endVideoCapture");
+    //WLogDebug(@"will endVideoCapture");
     [self _enqueueBlockInCaptureVideoQueue:^{
         if (!_flags.recording)
             return;
@@ -1373,8 +1373,8 @@ typedef void (^PBJVisionBlock)();
 
 	NSDictionary *videoSettings = @{ AVVideoCodecKey : AVVideoCodecH264,
                                      AVVideoScalingModeKey : AVVideoScalingModeResizeAspectFill,
-                                     AVVideoWidthKey : @(VIDEO_EDIT_EXPORT_SIZE),
-                                     AVVideoHeightKey : @(VIDEO_EDIT_EXPORT_SIZE),
+                                     AVVideoWidthKey : @(640),
+                                     AVVideoHeightKey : @(640),
                                      AVVideoCompressionPropertiesKey : compressionSettings };
     
     return [_mediaWriter setupVideoOutputDeviceWithSettings:videoSettings];
@@ -1590,6 +1590,8 @@ typedef void (^PBJVisionBlock)();
         }
     }];
 }
+
+
 
 - (void)_sessionStopped:(NSNotification *)notification
 {
@@ -2003,7 +2005,7 @@ typedef void (^PBJVisionBlock)();
         return;
     }
     _cutfileStatus = MediaWriterCutfileStatusWillGen;
-    NSString *outputPath = [Util generateVideofilePath:kVideoCutfile];
+    NSString *outputPath = [self generateVideofilePath:@"cutfile"];
     if(!outputPath){
         NSLog(@"产生文件地址失败");
         return ;
@@ -2020,6 +2022,34 @@ typedef void (^PBJVisionBlock)();
     [_delegate visionDidPauseVideoCapture:self];
     _cutfileStatus = MediaWriterCutfileStatusDidGen;
     //NSLog(@"did initOutputFile...");
+}
+
+
+
+
+- (NSString *)generateVideofilePath:(NSString *)filetype{
+    
+    NSFileManager* fileMgr = [NSFileManager defaultManager];
+    
+    NSArray   *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *videoDirectoryPath = [paths objectAtIndex:0];
+    videoDirectoryPath = [NSString stringWithFormat:@"%@/%@", videoDirectoryPath, @"videofile"];
+    if (![fileMgr fileExistsAtPath:videoDirectoryPath]) {
+        [fileMgr createDirectoryAtPath:videoDirectoryPath withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    NSString *outputPath = [NSString stringWithFormat:@"%@/%@_%lld.mp4", videoDirectoryPath,filetype, (long long)([NSDate timeIntervalSinceReferenceDate] * 1000)];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:outputPath]) {
+        NSError *error = nil;
+        if (![[NSFileManager defaultManager] removeItemAtPath:outputPath error:&error]) {
+            //WLogError(@"could not setup an output file");
+            return nil;
+        }
+    }
+    
+    if (!outputPath || [outputPath length] == 0)
+        return nil;
+    return outputPath;
 }
 
 @end
